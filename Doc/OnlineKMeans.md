@@ -1,4 +1,8 @@
 
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
 ---
 
 # 在线K-Means算法数学过程
@@ -107,8 +111,6 @@ graph TD
     D --> E[计算学习率η = 1/n_j*]
     E --> F[更新μ_j* = μ_j* + η(x - μ_j*)]
 ```
-
----
 
 ## 5. 与传统K-Means对比
 | 特性 | 在线K-Means | 传统K-Means |
