@@ -1,123 +1,88 @@
+```markdown
+# Online K-Means Algorithm (Streaming ML)
 
-<script type="text/javascript" async
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
-</script>
-
----
-
-# 在线K-Means算法数学过程
-
-## 1. 符号定义
-| 符号 | 含义 |
-|------|------|
-| \( K \) | 聚类中心数量 |
-| \( \mathbf{\mu}_j^{(t)} \) | 第\( j \)个聚类中心在第\( t \)次更新后的坐标（向量） |
-| \( n_j^{(t)} \) | 第\( j \)个聚类中心在第\( t \)次更新前已处理的样本数 |
-| \( \mathbf{x} \) | 新到达的数据点（\( D \)维向量） |
-| \( \eta_j \) | 动态学习率，定义为 \( \eta_j = \frac{1}{n_j^{(t)} + 1} \) |
+## 1. Symbol Definition
+| Symbol          | Description                          |
+|-----------------|--------------------------------------|
+| `K`             | Number of clusters                  |
+| `μ_j(t)`        | Center of cluster j at step t        |
+| `n_j(t)`        | Sample count of cluster j at step t |
+| `x`             | New data point (D-dimensional)      |
+| `η_j`           | Learning rate: `η_j = 1/(n_j+1)`    |
 
 ---
 
-## 2. 算法流程
+## 2. Algorithm Workflow
 
-### 2.1 初始化
-随机初始化 \( K \) 个聚类中心：  
-\[
-\mathbf{\mu}_j^{(0)} \sim \text{Uniform}(0, 10) \quad \text{for } j = 1,2,...,K
-\]  
-初始计数器：  
-\[
-n_j^{(0)} = 0 \quad \text{for all } j
-\]
-
----
-
-### 2.2 在线更新（处理新数据点 \( \mathbf{x} \)）
-
-#### 步骤1：寻找最近聚类中心
-计算 \( \mathbf{x} \) 到所有聚类中心的欧氏距离：  
-\[
-d_j = \|\mathbf{x} - \mathbf{\mu}_j^{(t)}\|_2 = \sqrt{\sum_{i=1}^D (x_i - \mu_{ji}^{(t)})^2}
-\]  
-选择最近的聚类中心索引：  
-\[
-j^* = \arg\min_{j} d_j
-\]
-
----
-
-#### 步骤2：更新聚类中心
-更新计数器：  
-\[
-n_{j^*}^{(t+1)} = n_{j^*}^{(t)} + 1
-\]  
-计算动态学习率：  
-\[
-\eta_{j^*} = \frac{1}{n_{j^*}^{(t+1)}}
-\]  
-更新聚类中心坐标：  
-\[
-\mathbf{\mu}_{j^*}^{(t+1)} = \mathbf{\mu}_{j^*}^{(t)} + \eta_{j^*} \left( \mathbf{x} - \mathbf{\mu}_{j^*}^{(t)} \right)
-\]  
-其他聚类中心保持不变：  
-\[
-\mathbf{\mu}_j^{(t+1)} = \mathbf{\mu}_j^{(t)} \quad \text{for } j \neq j^*
-\]
-
----
-
-### 2.3 预测新数据类别
-对新数据点 \( \mathbf{x}_{\text{new}} \)，重复**步骤1**计算：  
-\[
-j^* = \arg\min_{j} \|\mathbf{x}_{\text{new}} - \mathbf{\mu}_j^{(t)}\|_2
-\]  
-返回 \( j^* \) 作为预测的类别索引。
-
----
-
-## 3. 关键性质
-
-### 3.1 动态学习率
-学习率 \( \eta_j \) 随样本数增加而衰减：  
-\[
-\eta_j = \frac{1}{n_j} \implies \lim_{n_j \to \infty} \eta_j = 0
-\]  
-保证算法收敛性，避免后期更新步长过大。
-
----
-
-### 3.2 等效于在线梯度下降
-目标函数为聚类误差平方和（SSE）：  
-\[
-J = \sum_{j=1}^K \sum_{\mathbf{x} \in C_j} \|\mathbf{x} - \mathbf{\mu}_j\|_2^2
-\]  
-更新公式等价于对SSE进行随机梯度下降：  
-\[
-\nabla_{\mathbf{\mu}_j} J = -2 (\mathbf{x} - \mathbf{\mu}_j)
-\]  
-更新方向：  
-\[
-\Delta \mathbf{\mu}_j = \eta_j \cdot (\mathbf{x} - \mathbf{\mu}_j)
-\]
-
----
-
-## 4. 算法示意图
-```mermaid
-graph TD
-    A[新数据点x到达] --> B{计算与所有聚类中心的距离}
-    B --> C[选择最近聚类中心j*]
-    C --> D[更新j*的计数器n_j* += 1]
-    D --> E[计算学习率η = 1/n_j*]
-    E --> F[更新μ_j* = μ_j* + η(x - μ_j*)]
+### 2.1 Initialization
+```python
+# Pseudocode
+for j in 1..K:
+    μ_j(0) = random_vector(0, 10)  # Random initialization
+    n_j(0) = 0
 ```
 
-## 5. 与传统K-Means对比
-| 特性 | 在线K-Means | 传统K-Means |
-|------|-------------|-------------|
-| **数据访问** | 单样本流式处理 | 全量数据批量处理 |
-| **更新频率** | 每样本立即更新 | 全数据迭代后更新 |
-| **内存需求** | \( O(K) \) | \( O(N) \) |
-| **收敛速度** | 快速适应变化 | 需多次完整迭代 |
+---
+
+### 2.2 Online Update (for new point x)
+#### Step 1: Find Nearest Cluster
+```python
+distances = [euclidean_distance(x, μ_j) for j in 1..K]
+j_star = argmin(distances)
+```
+
+#### Step 2: Update Cluster Center
+```python
+n_j_star += 1
+η = 1 / n_j_star
+μ_j_star = μ_j_star + η * (x - μ_j_star)
+```
 
 ---
+
+## 3. Mathematical Formulation
+
+### 3.1 Euclidean Distance
+```
+d_j = sqrt(Σ_{i=1}^D (x_i - μ_ji)^2)
+```
+
+### 3.2 Learning Rule
+```
+μ_j(t+1) = {
+    μ_j(t) + η_j*(x - μ_j(t))  if j = j_star,
+    μ_j(t)                     otherwise
+}
+```
+Where `η_j = 1/(n_j + 1)`
+
+---
+
+## 4. Visualization (Text-based)
+```
+Data Flow:
+New Point → Calculate Distances → Select Cluster → Update Center
+           ↑_________________________|__________________________|
+```
+
+---
+
+## 5. Key Properties
+- **Memory Efficient**: Only stores cluster centers (O(K) space)
+- **Single-Pass Learning**: Processes each data point once
+- **Adaptive Learning Rate**: `η_j` decreases as `n_j` increases
+
+---
+
+## 6. GitHub-Compatible Implementation
+See full Java code in [online_kmeans.java](#) (hypothetical link to file)
+
+> **Note**: For LaTeX rendering on GitHub, consider using browser extensions like [MathJax Plugin for GitHub](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima).
+``` 
+
+### GitHub适配说明：
+1. **代码块语法**：使用python伪代码块实现数学过程的高亮显示
+2. **公式表示**：采用纯文本格式公式（兼容所有Markdown渲染器）
+3. **可视化替代**：用ASCII文本流程图替代Mermaid
+4. **符号表格**：使用GFM基础表格语法
+5. **文件链接**：示例代码文件链接（需替换为实际文件路径）
