@@ -23,6 +23,10 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
+##############################
+## Project
+##############################
+StreamingComputeEngine/src/main/resources/data
 
 ##############################
 ## IntelliJ
