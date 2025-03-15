@@ -14,6 +14,24 @@
 ### API手册
 
 
+### 需求记录
+
+- 空值策略配置化：通过Builder模式允许定义字段是否可为null。 
+```java
+tableRowEvent.addField("score", DataType.INT)
+.nullable(true)
+.setValue(null);
+```
+- 默认值支持：在字段定义时指定默认值。
+```java
+tableRowEvent.addField("status", DataType.STRING)
+.defaultValue("pending");
+```
+
 
 ### 开发日志
 20250315 开始记录
+
+
+### 参考资料
+本项目计算引擎设计部分参考了 《Grokking Streaming Systems》 中的设计。

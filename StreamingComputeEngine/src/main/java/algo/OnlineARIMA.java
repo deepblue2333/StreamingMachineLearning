@@ -1,13 +1,15 @@
 package algo;
 
+import api.MachineLearningRowEvent;
 import api.Model;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
-public class OnlineARIMA {
+public class OnlineARIMA implements Model {
     private final int p, d, q;
     private final Queue<Double> rawDataWindow;  // 原始数据窗口（用于差分）
     private final Queue<Double> diffDataWindow;  // 差分后数据窗口（AR特征）
@@ -131,6 +133,44 @@ public class OnlineARIMA {
         return reconstructed[reconstructed.length - 1];
     }
 
+    @Override
+    public MachineLearningRowEvent predict(MachineLearningRowEvent event) {
+        String singlePredictionField;
+
+        Set<String> predictionFields = event.getPredictionFields();
+        // 判断是否仅包含一个元素
+        if (predictionFields.size() == 1) {
+            // 获取唯一元素
+            singlePredictionField = predictionFields.iterator().next();
+            System.out.println("唯一预测字段: " + singlePredictionField);
+        } else {
+            // 处理不符合预期的情况
+            throw new IllegalStateException("预测字段数量异常，期望1个，实际：" + predictionFields.size());
+        }
+        Double predictValue = predict();
+        event.updateField(singlePredictionField, predictValue);
+        return event;
+    }
+
+    @Override
+    public void update(MachineLearningRowEvent event) {
+        String singleFeatureField;
+
+        Set<String> featureFields = event.getPredictionFields();
+        // 判断是否仅包含一个元素
+        if (featureFields.size() == 1) {
+            // 获取唯一元素
+            singleFeatureField = featureFields.iterator().next();
+            System.out.println("唯一特征字段: " + singleFeatureField);
+        } else {
+            // 处理不符合预期的情况
+            throw new IllegalStateException("特征字段数量异常，期望1个，实际：" + featureFields.size());
+        }
+        Double streamDataValue = (Double) event.getDouble(singleFeatureField);
+        // 更新模型
+        update(streamDataValue);
+    }
+
     // 示例用法
     public static void main(String[] args) {
         OnlineARIMA model = new OnlineARIMA(2, 1, 1, 10, 0.01);
@@ -142,4 +182,5 @@ public class OnlineARIMA {
                     data, model.predict(), model.forecast());
         }
     }
+
 }

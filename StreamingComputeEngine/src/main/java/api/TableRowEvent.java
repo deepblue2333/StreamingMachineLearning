@@ -25,6 +25,26 @@ public class TableRowEvent implements Event {
         return (T) dataType.getClassType().cast(cell.getValue());
     }
 
+    public void updateField(String fieldName, Object value) {
+        Cell existingCell = fields.get(fieldName);
+        validateFieldExists(fieldName, existingCell);
+        DataType dataType = existingCell.getDataType();
+
+        // 允许更新为null值（根据需求可选）
+        if (value == null) {
+            fields.put(fieldName, new Cell(dataType, null)); // 保持原类型
+            return;
+        }
+
+        // 非空时校验类型
+        if (!dataType.getClassType().isInstance(value)) {
+            throw new IllegalArgumentException("字段类型不匹配 [" + fieldName + "] 期望："
+                    + dataType.getClassType().getSimpleName() + " 实际："
+                    + value.getClass().getSimpleName());
+        }
+        fields.put(fieldName, new Cell(dataType, value));
+    }
+
     // 便捷方法：获取字符串类型字段
     public String getString(String fieldName) {
         return getField(fieldName, DataType.STRING);
@@ -58,10 +78,9 @@ public class TableRowEvent implements Event {
         if (dataType == null) {
             throw new IllegalArgumentException("数据类型不能为空");
         }
-        if (value == null) {
-            throw new IllegalArgumentException("字段值不能为空");
-        }
-        if (!dataType.getClassType().isInstance(value)) {
+        // 允许 value == null
+
+        if (value != null && !dataType.getClassType().isInstance(value)) { // 仅非空时校验类型
             throw new IllegalArgumentException("字段类型不匹配 [" + fieldName + "] 期望："
                     + dataType.getClassType().getSimpleName() + " 实际："
                     + value.getClass().getSimpleName());

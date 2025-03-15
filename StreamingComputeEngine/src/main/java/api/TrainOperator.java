@@ -6,7 +6,7 @@ public abstract class TrainOperator extends Operator {
     @Getter
     private Model model;
 
-    private int instance;
+    protected int instance;
 
     public TrainOperator(String name, int parallelism, Model model) {
         super(name, parallelism);
