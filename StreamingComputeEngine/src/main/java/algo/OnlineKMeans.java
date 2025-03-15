@@ -1,4 +1,7 @@
-package onlineKMeans;
+package algo;
+
+import api.Model;
+import api.OnlineARIMAOperator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,7 +82,7 @@ public class OnlineKMeans {
         // 配置参数
         int dimensions = 2;    // 数据维度
         int k = 3;             // 聚类数量
-        int numPoints = 1000;  // 模拟数据量
+        long numPoints = 1000000000000L;  // 模拟数据量
 
         // 初始化模型
         OnlineKMeans model = new OnlineKMeans(k, dimensions);
@@ -88,7 +91,7 @@ public class OnlineKMeans {
         Random rand = new Random();
         double[][] trueCentroids = {{2.0, 2.0}, {8.0, 8.0}, {5.0, 5.0}};  // 真实中心
 
-        for (int i = 0; i < numPoints; i++) {
+        for (long i = 0; i < numPoints; i++) {
             // 随机选择一个真实中心，生成带高斯噪声的数据点
             int cluster = rand.nextInt(k);
             double[] point = new double[dimensions];
