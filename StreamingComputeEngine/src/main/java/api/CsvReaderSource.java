@@ -1,5 +1,6 @@
 package api;
 
+import job.Logger;
 import lombok.Getter;
 
 import java.io.BufferedReader;
@@ -16,6 +17,15 @@ public class CsvReaderSource extends Source {
     private transient BufferedReader currentReader;
     private transient int currentFileIndex;
 
+    private final boolean skipHeader;
+    private final TableRowEvent.DataType[] columnTypes;
+
+    private final String[] columnNames;
+
+//    public enum DataType {
+//        STRING, INT, LONG, DOUBLE, BOOLEAN
+//    }
+
     /**
      * 构造函数
      * @param name        算子名称
@@ -23,10 +33,33 @@ public class CsvReaderSource extends Source {
      * @param directory   监控的目录路径
      * @param delimiter   CSV字段分隔符
      */
-    public CsvReaderSource(String name, int parallelism, String directory, char delimiter) {
+//    public CsvReaderSource(String name, int parallelism, String directory, char delimiter) {
+//        super(name, parallelism);
+//        this.directoryPath = directory;
+//        this.delimiter = delimiter;
+//    }
+
+    /**
+     * 完整参数构造函数
+     * @param columnTypes  每列数据类型（数组长度需与CSV列数一致）
+     * @param skipHeader   是否跳过首行头部
+     */
+    public CsvReaderSource(String name, int parallelism,
+                           String directory, char delimiter,
+                           TableRowEvent.DataType[] columnTypes, String[] columnNames, boolean skipHeader) {
         super(name, parallelism);
         this.directoryPath = directory;
         this.delimiter = delimiter;
+        this.columnTypes = columnTypes;
+        this.skipHeader = skipHeader;
+        this.columnNames = columnNames;
+    }
+
+    // 简化构造函数（默认不跳过头）
+    public CsvReaderSource(String name, int parallelism,
+                           String directory, char delimiter,
+                           TableRowEvent.DataType[] columnTypes, String[] columnNames) {
+        this(name, parallelism, directory, delimiter, columnTypes,  columnNames, false);
     }
 
     @Override
@@ -62,10 +95,13 @@ public class CsvReaderSource extends Source {
                 // 1. 从当前文件读取一行
                 if ((line = currentReader.readLine()) != null) {
                     // 2. 解析CSV行（简单实现，实际应处理转义和引号）
-                    String[] fields = line.split(String.valueOf(delimiter));
+//                    String[] fields = line.split(String.valueOf(delimiter));
+                    TableRowEvent event = parseLine(line);
 
-                    // 3. 创建事件并发送
-//                    eventCollector.add(new CSVRecordEvent(fields));
+                     // 3. 创建事件并发送
+                    eventCollector.add(event);
+
+                    Logger.log(String.format("add event to eventCollector: %s \n", event));
                 }
                 // 4. 文件读取完毕时切换下一个文件
                 else if (!openNextFile()) {
@@ -74,6 +110,57 @@ public class CsvReaderSource extends Source {
             }
         } catch (IOException e) {
             throw new RuntimeException("Error reading CSV file", e);
+        }
+    }
+
+    private TableRowEvent parseLine(String line) {
+        TableRowEvent event = new TableRowEvent();
+
+        String[] raw = line.split(String.valueOf(delimiter));
+        Object[] result = new Object[raw.length];
+
+        for (int i = 0; i < raw.length; i++) {
+            try {
+                result[i] = convertValue(raw[i].trim(), columnTypes[i]);
+                event.addField(columnNames[i], columnTypes[i], result[i]);
+            } catch (Exception e) {
+                throw new CsvParseException(
+                        String.format("Parse error at column %d: %s", i, raw[i]), e);
+            }
+        }
+        return event;
+    }
+
+    private Object convertValue(String value, TableRowEvent.DataType type) {
+        if (value.isEmpty()) return null;
+
+        switch (type) {
+            case STRING:
+                return value;
+            case INT:
+                return Integer.parseInt(value);
+//            case LONG:
+//                return Long.parseLong(value);
+            case DOUBLE:
+                return Double.parseDouble(value);
+//            case BOOLEAN:
+//                return parseBoolean(value);
+            default:
+                throw new UnsupportedOperationException("Unsupported type: " + type);
+        }
+    }
+
+    private boolean parseBoolean(String value) {
+        if (value.equalsIgnoreCase("true")) return true;
+        if (value.equalsIgnoreCase("false")) return false;
+        if (value.equals("1")) return true;
+        if (value.equals("0")) return false;
+        throw new IllegalArgumentException("Invalid boolean value: " + value);
+    }
+
+    public static class CsvParseException extends RuntimeException {
+        public CsvParseException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 
@@ -95,6 +182,12 @@ public class CsvReaderSource extends Source {
             // 打开新文件
             File nextFile = filesToProcess.get(currentFileIndex++);
             currentReader = new BufferedReader(new FileReader(nextFile));
+
+            // 跳过头部
+            if (skipHeader) {
+                currentReader.readLine();
+            }
+
             return true;
         } catch (IOException e) {
             throw new RuntimeException("Failed to open file: " +

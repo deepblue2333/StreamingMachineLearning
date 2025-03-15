@@ -3,6 +3,7 @@ package job;
 import api.CsvReaderSource;
 import api.Job;
 import api.Stream;
+import api.TableRowEvent;
 import engine.JobStarter;
 
 public class CsvReaderSourceTest {
@@ -14,7 +15,17 @@ public class CsvReaderSourceTest {
                 "CsvReader",
                 1,
                 directory,
-                ',');
+                ',',
+                new TableRowEvent.DataType[]{
+                        TableRowEvent.DataType.DOUBLE,
+                        TableRowEvent.DataType.DOUBLE,
+                        TableRowEvent.DataType.DOUBLE,
+                        TableRowEvent.DataType.DOUBLE,
+                        TableRowEvent.DataType.DOUBLE,
+                        TableRowEvent.DataType.DOUBLE
+                },
+                new String[]{"Timestamp", "Open", "High", "Low", "Close", "Close"},
+                true);
         Stream csvStream = job.addSource(csvReaderSource);
 
         JobStarter starter = new JobStarter(job);
