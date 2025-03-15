@@ -1,10 +1,8 @@
 package api;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TableRowEvent implements Event {
     // 字段存储核心结构：字段名 -> 类型值容器
@@ -43,6 +41,30 @@ public class TableRowEvent implements Event {
                     + value.getClass().getSimpleName());
         }
         fields.put(fieldName, new Cell(dataType, value));
+    }
+
+    // 新增方法：通过字段名获取数据类型
+    public DataType getDataType(String fieldName) {
+        Cell cell = fields.get(fieldName);
+        validateFieldExists(fieldName, cell);
+        return cell.getDataType();
+    }
+
+    // 新增方法：安全获取数据类型（返回Optional）
+    public Optional<DataType> getDataTypeSafe(String fieldName) {
+        return Optional.ofNullable(fields.get(fieldName))
+                .map(Cell::getDataType);
+    }
+
+    // 新增方法：批量获取字段类型映射
+    public Map<String, DataType> getDataTypes() {
+        return Collections.unmodifiableMap(
+                fields.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().getDataType()
+                        ))
+        );
     }
 
     // 便捷方法：获取字符串类型字段

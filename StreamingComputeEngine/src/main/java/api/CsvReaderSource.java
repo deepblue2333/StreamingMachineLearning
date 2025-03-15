@@ -91,7 +91,7 @@ public class CsvReaderSource extends Source {
     public void getEvents(EventCollector eventCollector) {
         try {
             String line;
-            while (true) {
+//            while (true) {
                 // 1. 从当前文件读取一行
                 if ((line = currentReader.readLine()) != null) {
                     // 2. 解析CSV行（简单实现，实际应处理转义和引号）
@@ -104,10 +104,10 @@ public class CsvReaderSource extends Source {
                     Logger.log(String.format("add event to eventCollector: %s \n", event));
                 }
                 // 4. 文件读取完毕时切换下一个文件
-                else if (!openNextFile()) {
-                    break;  // 没有更多文件可处理
-                }
-            }
+//                else if (!openNextFile()) {
+//                    break;  // 没有更多文件可处理
+//                }
+//            }
         } catch (IOException e) {
             throw new RuntimeException("Error reading CSV file", e);
         }

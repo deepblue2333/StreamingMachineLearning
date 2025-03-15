@@ -15,8 +15,23 @@ public class MachineLearningRowEvent extends TableRowEvent {
         GROUND_TRUTH  // 真实值字段
     }
 
+    public MachineLearningRowEvent() {}
+
+    public MachineLearningRowEvent(TableRowEvent event, Map<String, FieldType> fieldTypes) {
+        this.fieldTypes = fieldTypes;
+        Set<String> fieldNames = event.getFieldNames();
+        for (String fieldName : fieldNames) {
+            addField(
+                    fieldName,
+                    event.getDataType(fieldName),
+                    fieldTypes.get(fieldName),
+                    event.getField(fieldName, event.getDataType(fieldName))
+            );
+        }
+    }
+
     // 存储字段名到用途类型的映射
-    private final Map<String, FieldType> fieldTypes = new HashMap<>();
+    private Map<String, FieldType> fieldTypes = new HashMap<>();
 
     // 覆盖父类addField方法，强制使用子类的方法
     @Override
