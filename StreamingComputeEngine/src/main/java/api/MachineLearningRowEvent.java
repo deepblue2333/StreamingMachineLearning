@@ -84,4 +84,17 @@ public class MachineLearningRowEvent extends TableRowEvent {
     public Map<String, FieldType> getAllFieldTypes() {
         return Collections.unmodifiableMap(fieldTypes);
     }
+
+    // 新增存在性检查方法
+    public boolean hasGroundTruthFields() {
+        return !getGroundTruthFields().isEmpty();
+    }
+
+    public boolean hasPredictionFields() {
+        return !getPredictionFields().isEmpty();
+    }
+
+    public boolean hasFeatureFields() {
+        return !getFeatureFields().isEmpty();
+    }
 }

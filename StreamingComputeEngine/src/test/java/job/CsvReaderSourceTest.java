@@ -29,13 +29,23 @@ public class CsvReaderSourceTest {
         Stream csvStream = job.addSource(csvReaderSource);
 
         Map<String, MachineLearningRowEvent.FieldType> fieldTypes = new HashMap<>();
-        fieldTypes.put("Timestamp", MachineLearningRowEvent.FieldType.FEATURE);
-        fieldTypes.put("Open", MachineLearningRowEvent.FieldType.GROUND_TRUTH);
+//        fieldTypes.put("Timestamp", MachineLearningRowEvent.FieldType.FEATURE);
+        fieldTypes.put("Open", MachineLearningRowEvent.FieldType.FEATURE);
 
         MachineLearningRowConvertOperator mlRowConverter =
                 new MachineLearningRowConvertOperator("mlRowConverter", 1, fieldTypes);
 
-        csvStream.applyOperator(mlRowConverter);
+        Stream mleStream = csvStream.applyOperator(mlRowConverter);
+
+        AddPredictionFieldForEstimate addPreOperator =
+                new AddPredictionFieldForEstimate("addPreOperator", 1);
+
+        Stream addPreStream = mleStream.applyOperator(addPreOperator);
+
+        OnlineARIMAOperator onlineARIMAOperator =
+                new OnlineARIMAOperator("onlineARIMAOperator", 1,2, 1, 1, 10, 0.01);
+
+        addPreStream.applyOperator(onlineARIMAOperator);
 
         JobStarter starter = new JobStarter(job);
         starter.start();

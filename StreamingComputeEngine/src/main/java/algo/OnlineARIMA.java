@@ -2,14 +2,16 @@ package algo;
 
 import api.MachineLearningRowEvent;
 import api.Model;
+import job.Logger;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-public class OnlineARIMA implements Model {
+public class OnlineARIMA implements Model, Serializable {
     private final int p, d, q;
     private final Queue<Double> rawDataWindow;  // 原始数据窗口（用于差分）
     private final Queue<Double> diffDataWindow;  // 差分后数据窗口（AR特征）
@@ -147,8 +149,10 @@ public class OnlineARIMA implements Model {
             // 处理不符合预期的情况
             throw new IllegalStateException("预测字段数量异常，期望1个，实际：" + predictionFields.size());
         }
-        Double predictValue = predict();
+        Double predictValue = forecast();
         event.updateField(singlePredictionField, predictValue);
+
+        Logger.log(String.format("预测值为：%s\n", predictValue));
         return event;
     }
 
@@ -156,7 +160,7 @@ public class OnlineARIMA implements Model {
     public void update(MachineLearningRowEvent event) {
         String singleFeatureField;
 
-        Set<String> featureFields = event.getPredictionFields();
+        Set<String> featureFields = event.getFeatureFields();
         // 判断是否仅包含一个元素
         if (featureFields.size() == 1) {
             // 获取唯一元素
