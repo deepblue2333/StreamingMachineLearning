@@ -27,6 +27,7 @@ public class SourceInstanceExecutor extends InstanceExecutor {
     try {
       source.getEvents(eventCollector);
     } catch (Exception e) {
+      e.printStackTrace();
       return false;  // exit thread
     }
 

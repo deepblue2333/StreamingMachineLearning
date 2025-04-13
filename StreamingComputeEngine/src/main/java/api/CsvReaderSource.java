@@ -98,10 +98,12 @@ public class CsvReaderSource extends Source {
 //                    String[] fields = line.split(String.valueOf(delimiter));
                     TableRowEvent event = parseLine(line);
 
+                    Thread.sleep(10);
+
                      // 3. 创建事件并发送
                     eventCollector.add(event);
 
-                    Logger.log(String.format("add event to eventCollector: %s \n", event));
+//                    Logger.log(String.format("add event to eventCollector: %s \n", event));
                 }
                 // 4. 文件读取完毕时切换下一个文件
 //                else if (!openNextFile()) {
@@ -110,6 +112,8 @@ public class CsvReaderSource extends Source {
 //            }
         } catch (IOException e) {
             throw new RuntimeException("Error reading CSV file", e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -124,8 +128,9 @@ public class CsvReaderSource extends Source {
                 result[i] = convertValue(raw[i].trim(), columnTypes[i]);
                 event.addField(columnNames[i], columnTypes[i], result[i]);
             } catch (Exception e) {
-                throw new CsvParseException(
-                        String.format("Parse error at column %d: %s", i, raw[i]), e);
+//                throw new CsvParseException(
+//                        String.format("Parse error at column %d: %s", i, raw[i]), e);
+                System.err.println("Error parsing field: " + raw[i]);
             }
         }
         return event;

@@ -23,7 +23,13 @@ public class EventDispatcher extends Process {
 
       GroupingStrategy grouping = downstreamExecutor.getGroupingStrategy();
       int instance = grouping.getInstance(event, outgoingQueues.length);
-      outgoingQueues[instance].put(event);
+      if (instance == -1) {
+          for (EventQueue outgoingQueue : outgoingQueues) {
+              outgoingQueue.put(event);
+          }
+      } else {
+        outgoingQueues[instance].put(event);
+      }
     } catch (InterruptedException e) {
       return false;
     }

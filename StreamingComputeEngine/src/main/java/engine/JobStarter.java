@@ -38,11 +38,11 @@ public class JobStarter {
     // All components are created now. Build the connections to connect the components together.
     setupConnections();
 
-    // Start all the processes.
-    startProcesses();
-
     // Start web server
     new WebServer(job.getName(), connectionList).start();
+
+    // Start all the processes.
+    startProcesses();
   }
 
   /**

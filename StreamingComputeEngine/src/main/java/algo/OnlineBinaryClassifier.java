@@ -1,12 +1,16 @@
 package algo;
 
+import api.MachineLearningRowEvent;
 import api.Model;
+import api.Operator;
+import job.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
-public class OnlineBinaryClassifier {
+public class OnlineBinaryClassifier implements Model {
     private final Map<String, Double> weights; // 特征权重
     private final double learningRate;
     private static final Random rand = new Random();
@@ -36,6 +40,57 @@ public class OnlineBinaryClassifier {
             double currentWeight = weights.getOrDefault(feature, 0.0);
             weights.put(feature, currentWeight - learningRate * error * value);
         }
+    }
+
+    @Override
+    public MachineLearningRowEvent predict(MachineLearningRowEvent event) {
+        Map<String, Double> features = new HashMap<>();
+        String singlePredictionField;
+
+        Set<String> featureFields = event.getFeatureFields();
+
+        for (String field : featureFields) {
+            features.put(field, event.getDouble(field));
+        }
+
+        Set<String> predictionFields = event.getPredictionFields();
+        // 判断是否仅包含一个元素
+        if (predictionFields.size() == 1) {
+            // 获取唯一元素
+            singlePredictionField = predictionFields.iterator().next();
+            System.out.println("唯一预测字段: " + singlePredictionField);
+        } else {
+            // 处理不符合预期的情况
+            throw new IllegalStateException("预测字段数量异常，期望1个，实际：" + predictionFields.size());
+        }
+
+        double prob = predictProbability(features);
+        int predictedLabel = prob > 0.5 ? 1 : 0;
+
+        event.updateField(singlePredictionField, predictedLabel);
+
+        Logger.log(String.format("预测值为：%s\n", predictedLabel));
+
+        return event;
+    }
+
+    @Override
+    public void update(MachineLearningRowEvent event) {
+        String singleFeatureField;
+        String LabelField;
+        Map<String, Double> features = new HashMap<>();
+
+        Set<String> featureFields = event.getFeatureFields();
+
+        for (String field : featureFields) {
+            features.put(field, event.getDouble(field));
+        }
+
+        LabelField = event.getPredictionFields().iterator().next();
+        int trueLabel = event.getInt(LabelField);
+
+        // 更新模型
+        update(features, trueLabel);
     }
 
     public static void main(String[] args) {
