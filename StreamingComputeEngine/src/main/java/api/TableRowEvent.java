@@ -160,4 +160,27 @@ public class TableRowEvent implements Event {
             return classType;
         }
     }
+
+    public String toCSVLine() {
+        return fields.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // 按字段名排序（可选）
+                .map(entry -> {
+                    Object value = entry.getValue().getValue();
+                    return value != null ? value.toString() : "";
+                })
+                .collect(Collectors.joining(","));
+    }
+
+    public String toCSVLine(List<String> fieldOrder) {
+        return fieldOrder.stream()
+                .map(fieldName -> {
+                    Cell cell = fields.get(fieldName);
+                    if (cell == null) {
+                        throw new IllegalArgumentException("字段不存在: " + fieldName);
+                    }
+                    Object value = cell.getValue();
+                    return value != null ? value.toString() : "";
+                })
+                .collect(Collectors.joining(","));
+    }
 }

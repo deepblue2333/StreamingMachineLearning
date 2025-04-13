@@ -5,12 +5,13 @@ import api.Model;
 import api.Operator;
 import job.Logger;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public class OnlineBinaryClassifier implements Model {
+public class OnlineBinaryClassifier implements Model, Serializable {
     private final Map<String, Double> weights; // 特征权重
     private final double learningRate;
     private static final Random rand = new Random();

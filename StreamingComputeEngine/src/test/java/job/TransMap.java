@@ -26,6 +26,8 @@ public class TransMap extends MapOperator {
             t.addField("trans_class", TableRowEvent.DataType.INT, 1);
         }
 
+        t.addField("predict_class", TableRowEvent.DataType.INT, -1);
+
         eventCollector.add(event);
     }
 }

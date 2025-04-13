@@ -3,6 +3,9 @@ package job;
 import api.*;
 import engine.JobStarter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CreditFraudJob {
     public static void main(String[] args) {
         api.Job job = new api.Job("CreditFraudJob");
@@ -51,16 +54,36 @@ public class CreditFraudJob {
         Stream csvStream = job.addSource(csvReaderSource);
 
         TransMap trans = new TransMap("trans", 1, new ReplicateGrouping());
-        Stream csvStream2 = csvStream.applyOperator(trans);
+        Stream stream_a_trans = csvStream.applyOperator(trans);
+
+        Map<String, MachineLearningRowEvent.FieldType> fieldTypes = new HashMap<>();
+//        fieldTypes.put("Timestamp", MachineLearningRowEvent.FieldType.FEATURE);
+        fieldTypes.put("V1", MachineLearningRowEvent.FieldType.FEATURE);
+        fieldTypes.put("V2", MachineLearningRowEvent.FieldType.FEATURE);
+        fieldTypes.put("V3", MachineLearningRowEvent.FieldType.FEATURE);
+        fieldTypes.put("predict_class", MachineLearningRowEvent.FieldType.PREDICTION);
+        fieldTypes.put("trans_class", MachineLearningRowEvent.FieldType.GROUND_TRUTH);
+
+        MachineLearningRowConvertOperator mlRowConverter =
+                new MachineLearningRowConvertOperator("mlRowConverter", 1, fieldTypes);
+        Stream stream_a_ml = stream_a_trans.applyOperator(mlRowConverter);
 
         PositiveFilter positiveFilter = new PositiveFilter("PositiveFilter", 1, new ReplicateGrouping());
-        Stream positiveStream = csvStream2.applyOperator(positiveFilter);
+        Stream positiveStream = stream_a_ml.applyOperator(positiveFilter);
 
-        PrintSink sink2 = new PrintSink("sink2", 2);
-        positiveStream.applyOperator(sink2);
+        OlineBinaryClassifierOperator binaryClassifier = new OlineBinaryClassifierOperator("binaryClassifier", 2, 0.01);
+        Stream binaryStream = positiveStream.applyOperator(binaryClassifier);
 
-        PrintSink sink = new PrintSink("sink1", 2);
-        csvStream2.applyOperator(sink);
+        stream_a_ml.applyOperator(binaryClassifier);
+
+        CsvSink csv_sink = new CsvSink("CsvSink", 2, "TestSinkData");
+        binaryStream.applyOperator(csv_sink);
+
+//        PrintSink sink2 = new PrintSink("sink2", 2);
+//        binaryStream.applyOperator(sink2);
+
+//        PrintSink sink = new PrintSink("sink1", 2);
+//        binaryStream.applyOperator(sink);
 
         JobStarter starter = new JobStarter(job);
         starter.start();
