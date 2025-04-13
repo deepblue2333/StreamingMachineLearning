@@ -27,6 +27,7 @@ buildNumber.properties
 ## Project
 ##############################
 StreamingComputeEngine/src/main/resources/data
+StreamingComputeEngine/src/main/resources/data1
 
 ##############################
 ## IntelliJ
@@ -71,4 +72,3 @@ nb-configuration.xml
 .DS_Store
 
 
-StreamingComputeEngine/src/main/resources/data1/*
