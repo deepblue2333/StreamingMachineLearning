@@ -69,3 +69,6 @@ nb-configuration.xml
 ## OS X
 ##############################
 .DS_Store
+
+
+StreamingComputeEngine/src/main/resources/data1/*
