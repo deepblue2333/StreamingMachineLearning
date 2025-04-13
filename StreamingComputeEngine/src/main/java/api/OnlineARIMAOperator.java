@@ -6,6 +6,7 @@ import job.Logger;
 import java.util.Set;
 
 public class OnlineARIMAOperator extends TrainOperator {
+    /* 注释 */
 
     public OnlineARIMAOperator(String name, int parallelism, int p, int d, int q, int windowSize, double learningRate) {
         super(name, parallelism, new OnlineARIMA(p, d, q, windowSize, learningRate));
